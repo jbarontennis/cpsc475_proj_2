@@ -1,5 +1,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-<!--TODO fill these in-->
+<item
+    android:title="Reset"
+    android:id="@+id/reset"
+    android:icon="@android:drawable/ic_menu_revert"
+    android:orderInCategory="1"
+    android:visible="true"
+    app:showAsAction="always"></item>
 </menu>

@@ -37,6 +37,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+
+
 public class MainActivity extends AppCompatActivity implements OnSharedPreferenceChangeListener {
 
     //these are constants and objects that I used, use them if you wish
@@ -71,6 +73,9 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
     Bitmap bmpThresholded;              //the black and white version of original image
     Bitmap bmpThresholdedColor;         //the colorized version of the black and white image
 
+    private static int PERMISSION_REQUEST_CAMERA = 0;
+    private static int PERMISSION_WRITE_EXTERNAL_STORAGE = 0;
+    private static int PERMISSION_READ_EXTERNAL_STORAGE = 0;
     //TODO manage all the permissions you need
 
     @Override
@@ -78,6 +83,8 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
         //TODO be sure to set up the appbar in the activity
 
         //dont display these
@@ -88,6 +95,7 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
             @Override
             public void onClick(View view) {
                 //TODO manage this, mindful of permissions
+                doTakePicture();
 
             }
         });
