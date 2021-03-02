@@ -74,8 +74,13 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
     Bitmap bmpThresholdedColor;         //the colorized version of the black and white image
 
     private static final int PERMISSION_REQUEST_CAMERA = 0;
-    private static final int PERMISSION_WRITE_EXTERNAL_STORAGE = 0;
-    private static final int PERMISSION_READ_EXTERNAL_STORAGE = 0;
+    private static final int PERMISSION_WRITE_EXTERNAL_STORAGE = 1;
+    private static final int PERMISSION_READ_EXTERNAL_STORAGE = 2;
+    private static final int PERMS_REQ_CODE = 4;
+
+    private static final String[] PERMISSIONS = {Manifest.permission.CAMERA,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE};
     //TODO manage all the permissions you need
 
     @Override
@@ -178,13 +183,16 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
     //TODO where photo is stored
     private File createImageFile(final String fn) {
         try{
-            File [] disk = getExternalMediaDirs();
-            File imageFile = new File(fn);
-
+            //File dir = getExternalFilesDir("png")
+            //File [] disk = getExternalMediaDirs();
+            //File imageFile = new File(fn);
+            File file = new File(getExternalFilesDir(null), fn);
+            file.createNewFile();
+            originalImagePath = file.getAbsolutePath();
+            return file;
         }catch(Exception e){
             return null;
         }
-        return null;
     }
 
     //DUMP for students
@@ -209,18 +217,29 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
      */
     private boolean verifyPermissions() {
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-                == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED) {
-            return true;
-        }else{
-            requestPermissions();
+        boolean havePermissions = true;
+        for(String perm: PERMISSIONS){
+            if(havePermissions) {
+                if (!(ActivityCompat.checkSelfPermission(this, perm)
+                        == PackageManager.PERMISSION_GRANTED)) {
+                    havePermissions = false;
+                }
+            }
+        }
+        if(!havePermissions){
+            for(String perm:PERMISSIONS){
+                if(ActivityCompat.shouldShowRequestPermissionRationale(this,
+                        perm)){
+                    Toast.makeText(this,"all permissions must be given",Toast.LENGTH_LONG).show();
+                }
+            }
+            requestPermissions(PERMISSIONS, PERMS_REQ_CODE);
+
         }
         //TODO fill in
 
         //and return false until they are granted
-        return false;
+        return havePermissions;
     }
 
     //take a picture and store it on external storage
