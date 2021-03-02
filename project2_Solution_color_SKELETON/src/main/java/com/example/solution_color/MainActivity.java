@@ -73,9 +73,9 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
     Bitmap bmpThresholded;              //the black and white version of original image
     Bitmap bmpThresholdedColor;         //the colorized version of the black and white image
 
-    private static int PERMISSION_REQUEST_CAMERA = 0;
-    private static int PERMISSION_WRITE_EXTERNAL_STORAGE = 0;
-    private static int PERMISSION_READ_EXTERNAL_STORAGE = 0;
+    private static final int PERMISSION_REQUEST_CAMERA = 0;
+    private static final int PERMISSION_WRITE_EXTERNAL_STORAGE = 0;
+    private static final int PERMISSION_READ_EXTERNAL_STORAGE = 0;
     //TODO manage all the permissions you need
 
     @Override
@@ -156,14 +156,14 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
     private void setUpFileSystem(){
         //TODO do we have needed permissions?
         //TODO if not then dont proceed
-
+    if(verifyPermissions()) {
         //get some paths
         // Create the File where the photo should go
         File photoFile = createImageFile(ORIGINAL_FILE);
         originalImagePath = photoFile.getAbsolutePath();
 
         File processedfile = createImageFile(PROCESSED_FILE);
-        processedImagePath=processedfile.getAbsolutePath();
+        processedImagePath = processedfile.getAbsolutePath();
 
         //worst case get from default image
         //save this for restoring
@@ -172,11 +172,18 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
 
         setImage();
     }
+    }
 
     //TODO manage creating a file to store camera image in
     //TODO where photo is stored
     private File createImageFile(final String fn) {
-        //TODO fill in
+        try{
+            File [] disk = getExternalMediaDirs();
+            File imageFile = new File(fn);
+
+        }catch(Exception e){
+            return null;
+        }
         return null;
     }
 
@@ -202,6 +209,14 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
      */
     private boolean verifyPermissions() {
 
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED) {
+            return true;
+        }else{
+            requestPermissions();
+        }
         //TODO fill in
 
         //and return false until they are granted
@@ -211,6 +226,10 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
     //take a picture and store it on external storage
     public void doTakePicture() {
         //TODO verify that app has permission to use camera
+        if(verifyPermissions()){
+            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            startActivity(intent);
+        }
 
         //TODO manage launching intent to take a picture
 
