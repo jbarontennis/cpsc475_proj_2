@@ -1,9 +1,11 @@
 package com.example.solution_color;
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceFragmentCompat;
+
 
 public class SettingsActivity extends AppCompatActivity {
 	@Override
@@ -18,6 +20,8 @@ public class SettingsActivity extends AppCompatActivity {
 		if (actionBar != null) {
 			actionBar.setDisplayHomeAsUpEnabled(true);
 		}
+		//Intent intent = new Intent(this, SettingsActivity.class);
+		//startActivity(intent);
 	  }
 
 	public static class SettingsFragment extends PreferenceFragmentCompat {

@@ -279,8 +279,6 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
                 // Create the File where the photo should go
                 File photoFile = createImageFile(ORIGINAL_FILE);
 
-                // Continue only if the File was successfully created
-                //  see https://developer.android.com/reference/androidx/core/content/FileProvider
                 if (photoFile != null) {
                     outputFileUri = FileProvider.getUriForFile(this,
                             "com.example.solution_color.fileprovider",
@@ -300,11 +298,12 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == resultCode){
+        if(requestCode == TAKE_PICTURE){
             if(resultCode == RESULT_OK){
                 setImage();
-                //scanSavedMediaFile(processedImagePath);
+                scanSavedMediaFile(processedImagePath);
                 scanSavedMediaFile(originalImagePath);
+
             }
         }
 
@@ -338,6 +337,7 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
         setImage();
         scanSavedMediaFile(originalImagePath);
         scanSavedMediaFile(processedImagePath);
+
     }
 
     public void doSketch() {
