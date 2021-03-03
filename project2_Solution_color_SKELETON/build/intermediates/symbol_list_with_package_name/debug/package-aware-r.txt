@@ -1541,6 +1541,7 @@ id clear_text
 id clip_horizontal
 id clip_vertical
 id collapseActionView
+id colorize
 id confirm_button
 id container
 id content
@@ -1687,10 +1688,12 @@ id seekbar_value
 id select_dialog_listview
 id selected
 id settings
+id share
 id shortcut
 id showCustom
 id showHome
 id showTitle
+id sketch
 id skipCollapsed
 id slide
 id smallLabel

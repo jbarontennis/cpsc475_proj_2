@@ -76,12 +76,19 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
     private static final int PERMISSION_REQUEST_CAMERA = 0;
     private static final int PERMISSION_WRITE_EXTERNAL_STORAGE = 1;
     private static final int PERMISSION_READ_EXTERNAL_STORAGE = 2;
-    private static final int PERMS_REQ_CODE = 4;
+    private static final int PERMS_REQ_CODE = 200;
+
+    private SharedPreferences preferences;
 
     private static final String[] PERMISSIONS = {Manifest.permission.CAMERA,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_EXTERNAL_STORAGE};
     //TODO manage all the permissions you need
+    private static final int resetButton = R.id.reset;
+    private static final int sketchButton = R.id.sketch;
+    private static final int colorizeButton = R.id.colorize;
+    private static final int shareButton = R.id.share;
+    private static final int settingsButton = R.id.settings;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,6 +99,7 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
         setSupportActionBar(toolbar);
         //TODO be sure to set up the appbar in the activity
 
+
         //dont display these
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
@@ -99,16 +107,20 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //TODO manage this, mindful of permissions
-                doTakePicture();
-
+                if(verifyPermissions()) {
+                    doTakePicture();
+                }
             }
         });
 
         //get the default image
         myImage = (ImageView) findViewById(R.id.imageView1);
 
-
+        if(preferences == null){
+            preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        }
+        preferences.registerOnSharedPreferenceChangeListener(this);
+        getPrefValues(preferences);
         //TODO manage the preferences and the shared preference listenes
         // TODO and get the values already there getPrefValues(settings);
         //TODO use getPrefValues(SharedPreferences settings)
@@ -148,6 +160,8 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
     //TODO Please ensure that this function is called by your preference change listener
     private void getPrefValues(SharedPreferences settings) {
         //TODO should track shareSubject, shareText, saturation, bwPercent
+        shareSubject = settings.getString(getResources().getString(R.string.shareTitle), "");
+        shareText = settings.getString(getResources().getString(R.string.sharemessage), "");
     }
 
     @Override
@@ -183,13 +197,18 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
     //TODO where photo is stored
     private File createImageFile(final String fn) {
         try{
-            //File dir = getExternalFilesDir("png")
-            //File [] disk = getExternalMediaDirs();
-            //File imageFile = new File(fn);
-            File file = new File(getExternalFilesDir(null), fn);
-            file.createNewFile();
-            originalImagePath = file.getAbsolutePath();
-            return file;
+            File[] storageDir = getExternalMediaDirs();
+            File imagefile = new File(storageDir[0], fn);
+            if (!storageDir[0].exists()) {
+                if (!storageDir[0].mkdirs()) {
+                    //Log.e(TAG, "Failed to create file in: " + storageDir[0]);
+                    return null;
+                }
+            }
+
+            imagefile.createNewFile();
+
+            return imagefile;
         }catch(Exception e){
             return null;
         }
@@ -207,7 +226,17 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
      */
     @Override
     public void onRequestPermissionsResult(int permsRequestCode, String[] permissions, int[] grantResults) {
-        //TODO fill in
+        boolean havePermissions = true;
+        if(permsRequestCode == PERMS_REQ_CODE){
+            for(int result: grantResults){
+                if(!(result == PackageManager.PERMISSION_GRANTED)){
+                    havePermissions = false;
+                }
+            }
+        }
+        if(havePermissions){
+            //doTakePicture();
+        }
     }
 
     //DUMP for students
@@ -236,7 +265,7 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
             requestPermissions(PERMISSIONS, PERMS_REQ_CODE);
 
         }
-        //TODO fill in
+
 
         //and return false until they are granted
         return havePermissions;
@@ -244,14 +273,26 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
 
     //take a picture and store it on external storage
     public void doTakePicture() {
-        //TODO verify that app has permission to use camera
-        if(verifyPermissions()){
+        if (verifyPermissions()) {
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            startActivity(intent);
+            if (intent.resolveActivity(getPackageManager()) != null) {
+                // Create the File where the photo should go
+                File photoFile = createImageFile(ORIGINAL_FILE);
+
+                // Continue only if the File was successfully created
+                //  see https://developer.android.com/reference/androidx/core/content/FileProvider
+                if (photoFile != null) {
+                    outputFileUri = FileProvider.getUriForFile(this,
+                            "com.example.solution_color.fileprovider",
+                            photoFile);
+                    intent.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri);
+                    startActivityForResult(intent, TAKE_PICTURE);
+                }
+            }
+
+            //TODO manage launching intent to take a picture
+
         }
-
-        //TODO manage launching intent to take a picture
-
     }
 
     //TODO manage return from camera and other activities
@@ -259,10 +300,14 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        //TODO get photo
-        //TODO set the myImage equal to the camera image returned
-        //TODO tell scanner to pic up this unaltered image
-        //TODO save anything needed for later
+        if(requestCode == resultCode){
+            if(resultCode == RESULT_OK){
+                setImage();
+                //scanSavedMediaFile(processedImagePath);
+                scanSavedMediaFile(originalImagePath);
+            }
+        }
+
 
     }
 
@@ -290,7 +335,9 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
         bmpOriginal = BitMap_Helpers.copyBitmap(myImage.getDrawable());
 
         //TODO make media scanner pick up that images are gone
-
+        setImage();
+        scanSavedMediaFile(originalImagePath);
+        scanSavedMediaFile(processedImagePath);
     }
 
     public void doSketch() {
@@ -363,7 +410,27 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
     //TODO set this up
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        //TODO handle all of the appbar button clicks
+        switch(item.getItemId()){
+            case resetButton:
+                doReset();
+                break;
+            case sketchButton:
+                doSketch();
+                break;
+            case colorizeButton:
+                doColorize();
+                break;
+            case shareButton:
+                doShare();
+                break;
+            case settingsButton:
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+                break;
+            default:
+                break;
+
+        }
 
         return true;
     }
