@@ -20,8 +20,8 @@ public class SettingsActivity extends AppCompatActivity {
 		if (actionBar != null) {
 			actionBar.setDisplayHomeAsUpEnabled(true);
 		}
-		//Intent intent = new Intent(this, SettingsActivity.class);
-		//startActivity(intent);
+
+
 	  }
 
 	public static class SettingsFragment extends PreferenceFragmentCompat {

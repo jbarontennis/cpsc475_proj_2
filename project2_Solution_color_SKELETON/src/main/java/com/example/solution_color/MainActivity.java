@@ -73,9 +73,6 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
     Bitmap bmpThresholded;              //the black and white version of original image
     Bitmap bmpThresholdedColor;         //the colorized version of the black and white image
 
-    private static final int PERMISSION_REQUEST_CAMERA = 0;
-    private static final int PERMISSION_WRITE_EXTERNAL_STORAGE = 1;
-    private static final int PERMISSION_READ_EXTERNAL_STORAGE = 2;
     private static final int PERMS_REQ_CODE = 200;
 
     private SharedPreferences preferences;
@@ -83,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
     private static final String[] PERMISSIONS = {Manifest.permission.CAMERA,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_EXTERNAL_STORAGE};
-    //TODO manage all the permissions you need
+
     private static final int resetButton = R.id.reset;
     private static final int sketchButton = R.id.sketch;
     private static final int colorizeButton = R.id.colorize;
@@ -97,7 +94,7 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        //TODO be sure to set up the appbar in the activity
+
 
 
         //dont display these
@@ -121,9 +118,6 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
         }
         preferences.registerOnSharedPreferenceChangeListener(this);
         getPrefValues(preferences);
-        //TODO manage the preferences and the shared preference listenes
-        // TODO and get the values already there getPrefValues(settings);
-        //TODO use getPrefValues(SharedPreferences settings)
 
         // Fetch screen height and width,
         DisplayMetrics metrics = this.getResources().getDisplayMetrics();
@@ -156,12 +150,12 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
         Log.d(DEBUG_TAG, "setImage: bmpOriginal copied");
     }
 
-    //TODO use this to set the following member preferences whenever preferences are changed.
-    //TODO Please ensure that this function is called by your preference change listener
+
     private void getPrefValues(SharedPreferences settings) {
-        //TODO should track shareSubject, shareText, saturation, bwPercent
-        shareSubject = settings.getString(getResources().getString(R.string.shareTitle), "");
-        shareText = settings.getString(getResources().getString(R.string.sharemessage), "");
+        shareSubject = settings.getString("shareText", getResources().getString(R.string.shareTitle));
+        shareText = settings.getString("shareText", getResources().getString(R.string.sharemessage));
+        saturation = settings.getInt("Saturation", R.id.colorize);
+        bwPercent = settings.getInt("sketch", R.id.sketch);
     }
 
     @Override
@@ -173,8 +167,6 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
 
 
     private void setUpFileSystem(){
-        //TODO do we have needed permissions?
-        //TODO if not then dont proceed
     if(verifyPermissions()) {
         //get some paths
         // Create the File where the photo should go
@@ -193,15 +185,13 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
     }
     }
 
-    //TODO manage creating a file to store camera image in
-    //TODO where photo is stored
+
     private File createImageFile(final String fn) {
         try{
             File[] storageDir = getExternalMediaDirs();
             File imagefile = new File(storageDir[0], fn);
             if (!storageDir[0].exists()) {
                 if (!storageDir[0].mkdirs()) {
-                    //Log.e(TAG, "Failed to create file in: " + storageDir[0]);
                     return null;
                 }
             }
@@ -256,14 +246,13 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
             }
         }
         if(!havePermissions){
-            for(String perm:PERMISSIONS){
-                if(ActivityCompat.shouldShowRequestPermissionRationale(this,
-                        perm)){
-                    Toast.makeText(this,"all permissions must be given",Toast.LENGTH_LONG).show();
+            for(String perm: PERMISSIONS) {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                        perm)) {
+                    Snackbar.make(findViewById(android.R.id.content), perm + " GOTTA HAVE ALL PERMISSIONS", Snackbar.LENGTH_LONG).show();
                 }
             }
             requestPermissions(PERMISSIONS, PERMS_REQ_CODE);
-
         }
 
 
@@ -288,13 +277,12 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
                 }
             }
 
-            //TODO manage launching intent to take a picture
+
 
         }
     }
 
-    //TODO manage return from camera and other activities
-    // TODO handle edge cases as well (no pic taken)
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -314,7 +302,7 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
      * delete original and processed images, then rescan media paths to pick up that they are gone.
      */
     private void doReset() {
-        //TODO verify that app has permission to use file system
+
         //do we have needed permissions?
         if (!verifyPermissions()) {
             return;
@@ -333,7 +321,7 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
         //save this for restoring
         bmpOriginal = BitMap_Helpers.copyBitmap(myImage.getDrawable());
 
-        //TODO make media scanner pick up that images are gone
+
         setImage();
         scanSavedMediaFile(originalImagePath);
         scanSavedMediaFile(processedImagePath);
@@ -341,13 +329,11 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
     }
 
     public void doSketch() {
-        //TODO verify that app has permission to use file system
         //do we have needed permissions?
         if (!verifyPermissions()) {
             return;
         }
-
-        //sketchify the image
+           //sketchify the image
         if (bmpOriginal == null){
             Log.e(DEBUG_TAG, "doSketch: bmpOriginal = null");
             return;
@@ -363,7 +349,6 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
     }
 
     public void doColorize() {
-        //TODO verify that app has permission to use file system
         //do we have needed permissions?
         if (!verifyPermissions()) {
             return;
@@ -396,18 +381,18 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
     }
 
     public void doShare() {
-        //TODO verify that app has permission to use file system
         //do we have needed permissions?
-        if (!verifyPermissions()) {
-            return;
-        }
 
-        //TODO share the processed image with appropriate subject, text and file URI
-        //TODO the subject and text should come from the preferences set in the Settings Activity
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_SEND);
+        intent.setType("image/png");
+        intent.putExtra(android.content.Intent.EXTRA_SUBJECT, shareSubject);
+        intent.putExtra(android.content.Intent.EXTRA_TEXT, shareText);
+        intent.putExtra(Intent.EXTRA_STREAM, outputFileUri);
+        startActivity(intent.createChooser(intent, "share"));
 
     }
 
-    //TODO set this up
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()){
@@ -435,10 +420,9 @@ public class MainActivity extends AppCompatActivity implements OnSharedPreferenc
         return true;
     }
 
-    //TODO set up pref changes
     @Override
     public void onSharedPreferenceChanged(SharedPreferences arg0, String arg1) {
-        //TODO reload prefs at this point
+        getPrefValues(arg0);
     }
 
     /**
